@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>荷包蛋的逆襲</title>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+	<script type="text/javascript" src="js/paper-full.min.js"></script>
+	<script type="text/paperscript" canvas="paperCanvas">
+
+		var center = view.center;	
+		var mousePos = view.center;
+		var spacing = new Point(450,0);
+		var leftEgg = center - spacing;
+		var rightEgg = center + spacing;
+		var eggs = [];
+		var firstClicked = false;
+
+		function Egg(center) {
+			this.white = new Path.Circle({
+				center: center,
+				radius: 200,
+				selected: false,
+				fillColor: '#fff',
+				opacity: 0.9
+			});
+
+			this.yellow = new Path.Circle({
+				center: center,
+				radius: 80,
+				selected: false,
+				fillColor: '#ffe100',
+				opacity: 0.9
+			});
+
+			this.center = center;
+		}
+		
+		
+		Path.prototype.scalePoint = function(pointsNum, dRadius) {
+			var segmentsLength = this.segments.length;
+			var pointDegree = 2 * Math.PI * (pointsNum / segmentsLength);
+			var vector = [-1 * dRadius * Math.cos(pointDegree), -1 * dRadius * Math.sin(pointDegree)];
+			this.segments[pointsNum].point = new Point(this.originSegments[pointsNum][0], this.originSegments[pointsNum][1]) + vector;
+		}
+
+		Path.prototype.setOriginSeg = function() {
+			this.flatten(130);
+			this.smooth();
+			this.originSegments = [];
+			for(var i = 0; i < this.segments.length; i ++){
+				this.originSegments.push([this.segments[i].point.x, this.segments[i].point.y]);
+			};
+		}
+
+		Egg.prototype.transform = function(event) {
+			var mouseVec = mousePos - this.center;
+
+			//transform white
+			for (var i = 0; i < this.white.segments.length; i++) {
+				var sinSeed = event.count + (i + i % 8)* 50; 
+				var sinWave = Math.sin(sinSeed/50); 
+				var delta = sinWave * (mouseVec.length / 30)* Math.sin(sinSeed /100);
+				this.white.scalePoint(i, delta *2);
+			}
+			//transform yellow
+			for (var i = 0; i < this.yellow.segments.length; i++) {
+				var sinSeed = event.count + (i + i % 3)* 100; 
+				var sinWave = Math.sin(sinSeed/100); 
+				var delta = sinWave * (mouseVec.length / 4)* Math.sin(sinSeed /200);
+				this.yellow.scalePoint(i, delta * 0.2);	
+			}
+		}
+		
+		function onMouseMove(event) {
+			mousePos = event.point;
+		}
+
+		function onMouseUp(event) {
+			var newEgg = new Egg(event.point);
+			newEgg.white.setOriginSeg();
+			newEgg.yellow.setOriginSeg();
+			eggs.push(newEgg);
+			
+				document.getElementById("tip").style.display = "none";
+			
+		}
+		
+		function onFrame(event) {
+			for(var i = 0; i < eggs.length; i ++) {
+				eggs[i].transform(event);
+			}	
+		}
+		
+	</script>	
+	<style>
+		body,html {
+			margin:0;
+			padding: 0;
+			text-align: center;
+			font-family: 'Microsoft Jhenghei';
+		}
+		canvas {
+			position: absolute;
+			top: 0;
+			left: 0;			
+		}
+		#paperCanvas{
+			height:100%;
+			width:100%;
+			background-color: hsla(250, 35%, 16%, 1);
+		}
+		h1,h2 {
+			color: #fff;
+			position: absolute;
+			left: 0;
+			right: 0;
+		}
+		span {
+			color: #ccc;
+			position: absolute;
+			left: 0;
+			right: 0;
+			top: 70px;
+		}
+	</style>
+</head>
+<body>
+	<canvas id="paperCanvas"></canvas>
+	<h1>荷包蛋的逆襲</h1>
+	<span id="tip">點擊任何地方以開始...</span>	
+</body>
+</html>
